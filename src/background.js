@@ -1,21 +1,34 @@
 'use strict';
-
-// With background scripts you can communicate with popup
-// and contentScript files.
-// For more information on background script,
-// See https://developer.chrome.com/extensions/background_pages
+import * as dayjs from 'dayjs'
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'GREETINGS') {
-    const message = `Hi ${
-      sender.tab ? 'Con' : 'Pop'
-    }, my name is Bac. I am from Background. It's great to hear from you.`;
+  if (request.type === 'GET_HISTORY') {
+    const query = {
+      maxResults: 300,
+      text: '',
+    }
+    chrome.history.search(
+      query,
+      results => {
+        // process
+        const objectUrl = processHistory(results);
+        sendResponse(objectUrl);
 
-    // Log message coming from the `request` parameter
-    console.log(request.payload.message);
-    // Send a response message
-    sendResponse({
-      message,
-    });
+        // send email
+      }
+    )
   }
+
+  return true; // Inform Chrome that we will make a delayed sendResponse
 });
+
+
+function processHistory(history) {
+  // convert to csv
+  const csv = [];
+  csv.push(['url', 'title', 'visitCount', 'lastVisitTime']);
+  history.forEach(item => {
+    csv.push([item.url, JSON.stringify(item.title), item.visitCount, dayjs(item.lastVisitTime).format('YYYY-MM-DD at HH:mm')].join(','));
+  });
+  return csv.join('\n');
+}

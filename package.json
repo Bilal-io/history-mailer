@@ -1,7 +1,14 @@
 {
   "name": "history-mailer",
   "version": "0.1.0",
-  "description": "My Chrome Extension",
+  "description": "Browser extension for sending history highlights to your email",
+  "author": "Bilal Khoukhi",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bilal-io/history-mailer.git"
+  },
+  "homepage": "https://github.com/Bilal-io/history-mailer",
   "private": true,
   "scripts": {
     "watch": "webpack --mode=development --watch --config config/webpack.config.js",
@@ -16,5 +23,8 @@
     "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12",
     "webpack-merge": "^5.8.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.2"
   }
 }

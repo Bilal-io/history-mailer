@@ -1,112 +1,46 @@
-'use strict';
+"use strict";
+import * as dayjs from 'dayjs'
 
-import './popup.css';
+import "./popup.css";
 
 (function() {
-  // We will make use of Storage API to get and store `count` value
-  // More information on Storage API can we found at
-  // https://developer.chrome.com/extensions/storage
-
-  // To get storage access, we have to mention it in `permissions` property of manifest.json file
-  // More information on Permissions can we found at
-  // https://developer.chrome.com/extensions/declare_permissions
-  const counterStorage = {
-    get: cb => {
-      chrome.storage.sync.get(['count'], result => {
-        cb(result.count);
-      });
-    },
-    set: (value, cb) => {
-      chrome.storage.sync.set(
-        {
-          count: value,
-        },
-        () => {
-          cb();
-        }
-      );
-    },
-  };
-
-  function setupCounter(initialValue = 0) {
-    document.getElementById('counter').innerHTML = initialValue;
-
-    document.getElementById('incrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'INCREMENT',
-      });
-    });
-
-    document.getElementById('decrementBtn').addEventListener('click', () => {
-      updateCounter({
-        type: 'DECREMENT',
-      });
-    });
-  }
-
-  function updateCounter({ type }) {
-    counterStorage.get(count => {
-      let newCount;
-
-      if (type === 'INCREMENT') {
-        newCount = count + 1;
-      } else if (type === 'DECREMENT') {
-        newCount = count - 1;
-      } else {
-        newCount = count;
-      }
-
-      counterStorage.set(newCount, () => {
-        document.getElementById('counter').innerHTML = newCount;
-
-        // Communicate with content script of
-        // active tab by sending a message
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-          const tab = tabs[0];
-
-          chrome.tabs.sendMessage(
-            tab.id,
-            {
-              type: 'COUNT',
-              payload: {
-                count: newCount,
-              },
-            },
-            response => {
-              console.log('Current count value passed to contentScript file');
-            }
-          );
-        });
-      });
-    });
-  }
-
-  function restoreCounter() {
-    // Restore count value
-    counterStorage.get(count => {
-      if (typeof count === 'undefined') {
-        // Set counter value as 0
-        counterStorage.set(0, () => {
-          setupCounter(0);
-        });
-      } else {
-        setupCounter(count);
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', restoreCounter);
-
-  // Communicate with background file by sending a message
-  chrome.runtime.sendMessage(
-    {
-      type: 'GREETINGS',
-      payload: {
-        message: 'Hello, my name is Pop. I am from Popup.',
+  function downloadHistory() {
+    chrome.runtime.sendMessage(
+      {
+        type: "GET_HISTORY",
       },
-    },
-    response => {
-      console.log(response.message);
-    }
-  );
+      (response) => {
+        downloadFile(response);
+      }
+    );
+    return true;
+  }
+
+  function setup() {
+    document.querySelector("#download").addEventListener("click", () => {
+      downloadHistory();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", setup);
 })();
+
+function convertToObjectUrl(csv) {
+  return URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: "text/csv;charset=utf-8" }));
+}
+
+function downloadFile(csv) {
+  // convert csv string to object url
+  const objectUrl = convertToObjectUrl(csv);
+  // create a link
+  const link = document.createElement("a");
+  // set the link href
+  link.href = objectUrl;
+  // set the file name
+  link.download = `${dayjs().format('YYYY-MM-DD-HH:mm')}-history.csv`;
+
+  // append link to document, click it, then remove it
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

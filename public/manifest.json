@@ -10,14 +10,16 @@
     "128": "icons/icon_128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "action": {
     "default_title": "History Mailer",
     "default_popup": "popup.html"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "history"
   ],
   "content_scripts": [
     {
@@ -29,5 +31,6 @@
         "contentScript.js"
       ]
     }
-  ]
+  ],
+  "options_page": "options.html"
 }
